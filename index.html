@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <title>DRP Coffee | Order Online</title>
-
 <style>
 :root {
   --bg:#160b20;
@@ -57,6 +56,14 @@ h2{max-width:970px;margin:20px auto 12px;padding:0 15px}
   border:1px solid #57366b;border-radius:17px;padding:16px 13px;
   display:flex;flex-direction:column;min-height:145px;
 }
+.item-image{
+  width:100%;
+  aspect-ratio:1 / 1;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:12px;
+  display:block;
+}
 .item h3{font-size:15px;margin:0 0 10px}
 .price{color:#d9b6f4;font-size:17px;font-weight:bold;margin-top:auto}
 .add{
@@ -93,7 +100,6 @@ h2{max-width:970px;margin:20px auto 12px;padding:0 15px}
 }
 .empty{text-align:center;color:#c4b5ce}
 footer{text-align:center;padding:25px;color:#bda9c9;font-size:13px}
-
 .toast{
   position:fixed;bottom:25px;left:50%;
   transform:translate(-50%,20px);
@@ -104,7 +110,6 @@ footer{text-align:center;padding:25px;color:#bda9c9;font-size:13px}
   text-align:center;width:max-content;max-width:90%;pointer-events:none;
 }
 .toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
-
 .modal{
   display:none;position:fixed;inset:0;z-index:1000;
   background:rgba(0,0,0,.78);align-items:center;
@@ -157,34 +162,27 @@ footer{text-align:center;padding:25px;color:#bda9c9;font-size:13px}
 .confirm-custom{background:#7139a0;color:white}
 .cancel-custom{background:#493052;color:white}
 .hidden{display:none!important}
-
 @media(max-width:550px){
   .menu{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cart-row{align-items:flex-start}
 }
 </style>
 </head>
-
 <body>
-
 <header>
   <div class="logo">DRP</div>
   <p>COFFEE BAR · ORDER ONLINE</p>
   <p id="subtitle">اطلب قهوتك المفضلة</p>
 </header>
-
 <div class="top">
   <strong id="menuTitle">قائمة المشروبات</strong>
   <button class="lang" onclick="toggleLang()">EN / AR</button>
 </div>
-
 <input class="search" id="search"
 placeholder="ابحث عن منتج..." oninput="render()">
-
 <div class="categories" id="categories"></div>
 <div class="toast" id="cartToast" role="status" aria-live="polite"></div>
 <div class="menu" id="menu"></div>
-
 <div class="cart" id="cart">
   <h2>
     <span id="cartHeading">سلة الطلبات 🛒</span>
@@ -192,7 +190,6 @@ placeholder="ابحث عن منتج..." oninput="render()">
   </h2>
   <div id="cartItems"></div>
   <div class="total" id="total">المجموع: 0.00 JD</div>
-
   <div style="margin-bottom:15px">
     <input id="customerName" placeholder="اسم الزبون"
       style="width:100%;padding:13px;margin-bottom:10px;border-radius:10px">
@@ -204,37 +201,30 @@ placeholder="ابحث عن منتج..." oninput="render()">
       <option value="DRP شارع عبدالله غوشة">DRP شارع عبدالله غوشة</option>
     </select>
   </div>
-
   <button class="checkout" onclick="checkout()" id="checkoutBtn">
     تأكيد الطلب
   </button>
 </div>
-
 <footer>DRP COFFEE · THANK YOU FOR CHOOSING US ☕</footer>
-
 <div class="modal" id="customModal">
   <div class="modal-content">
     <h3 id="customTitle">تخصيص المشروب ☕</h3>
     <p id="customSubtitle">اختار الإضافات اللي بتحبها</p>
-
     <div class="custom-section hidden" id="milkSection">
       <h4 id="milkHeading">🥛 نوع الحليب</h4>
       <select id="milkSelect" class="custom-select"
         onchange="updateCustomizationPrice()"></select>
     </div>
-
     <div class="custom-section hidden" id="flavorSection">
       <h4 id="flavorHeading">🍓 اختر النكهة</h4>
       <select id="flavorSelect" class="custom-select">
         <option value="">اختر النكهة</option>
       </select>
     </div>
-
     <div class="custom-section hidden" id="syrupSection">
       <h4 id="syrupHeading">🍯 إضافات السيرب</h4>
       <div class="option-list" id="syrupOptions"></div>
     </div>
-
     <div class="custom-section hidden" id="shotSection">
       <h4 id="shotHeading">☕ الإسبريسو</h4>
       <label class="custom-option">
@@ -246,36 +236,30 @@ placeholder="ابحث عن منتج..." oninput="render()">
         </span>
       </label>
     </div>
-
     <div class="custom-section hidden" id="noteSection">
       <h4 id="noteHeading">📝 ملاحظة للباريستا (اختياري)</h4>
       <textarea id="specialNote" class="note-input"
         maxlength="500"
         placeholder="مثلاً: سكر قليل، بدون ثلج..."></textarea>
     </div>
-
     <div class="modal-price">
       <span id="priceLabel">السعر النهائي</span>
       <span id="customPrice">0.00 JD</span>
     </div>
-
     <div class="modal-actions">
       <button class="cancel-custom" onclick="closeCustomModal()" id="cancelCustom">إلغاء</button>
       <button class="confirm-custom" onclick="confirmCustomization()" id="confirmCustom">إضافة للسلة</button>
     </div>
   </div>
 </div>
-
 <script>
 let lang = "ar";
 let category = "All";
 let cart = [];
 let pendingProductIndex = null;
 let toastTimer = null;
-
 const SYRUP_PRICE = 0.50;
 const EXTRA_SHOT_PRICE = 0.50;
-
 const products = [
   {name:"Strawberry Refresher",price:2.50,cat:"Cold Drinks"},
   {name:"Peach Refresher",price:2.50,cat:"Cold Drinks"},
@@ -291,7 +275,6 @@ const products = [
   {name:"Mango Matcha",price:3.50,cat:"Cold Drinks"},
   {name:"Watermelon",price:2.00,cat:"Cold Drinks"},
   {name:"Iced Chocolate",price:2.50,cat:"Cold Drinks"},
-
   {name:"Crunch Cookies",price:2.75,cat:"Desserts"},
   {name:"Choco Ferrero",price:3.50,cat:"Desserts"},
   {name:"Lazez Kinder",price:2.75,cat:"Desserts"},
@@ -305,7 +288,6 @@ const products = [
   {name:"Lazloz Strawberry",price:3.00,cat:"Desserts"},
   {name:"Lazloz Mango",price:3.00,cat:"Desserts"},
   {name:"Watermelon Crunch",price:2.00,cat:"Desserts"},
-
   {name:"V60",price:3.00,cat:"Cold Coffee"},
   {name:"Iced Americano",price:1.50,cat:"Cold Coffee"},
   {name:"Milkshake Coffee",price:3.25,cat:"Cold Coffee"},
@@ -322,7 +304,6 @@ const products = [
   {name:"Frappe Chocolate",price:3.50,cat:"Cold Coffee"},
   {name:"Frappe Caramel",price:3.50,cat:"Cold Coffee"},
   {name:"Salted Caramel",price:2.50,cat:"Cold Coffee"},
-
   {name:"Espresso",price:1.00,cat:"Hot Coffee"},
   {name:"Turkish Coffee",price:1.00,cat:"Hot Coffee"},
   {name:"American",price:1.50,cat:"Hot Coffee"},
@@ -342,9 +323,7 @@ const products = [
   {name:"Hot Pistachio",price:2.25,cat:"Hot Coffee"},
   {name:"Hot Caramel Macchiato",price:2.75,cat:"Hot Coffee"}
 ];
-
 const categories = ["All","Cold Drinks","Cold Coffee","Hot Coffee","Desserts"];
-
 const milkTypes = [
   "حليب عادي",
   "حليب خالي الدسم",
@@ -352,30 +331,22 @@ const milkTypes = [
   "حليب اللوز",
   "حليب خالي اللاكتوز"
 ];
-
 const syrups = [
   {name:"Caramel",ar:"كراميل"},
   {name:"Vanilla",ar:"فانيلا"},
   {name:"Hazelnut",ar:"بندق"}
 ];
-
 const flavors = [
   {name:"Peach",ar:"خوخ"},
   {name:"Passion Fruit",ar:"باشن فروت"},
   {name:"Raspberry",ar:"رازبري"}
 ];
-
-/*
-  إعدادات التخصيص حسب اسم المنتج والفئة.
-  أي منتج غير موجود هنا لا يحتاج نافذة تخصيص.
-*/
 const FULL = {
   milk:true,
   syrups:["Caramel","Vanilla","Hazelnut"],
   shot:true,
   note:true
 };
-
 const customizationRules = {
   "Cold Drinks|Iced Tea": {
     flavor:true
@@ -393,7 +364,6 @@ const customizationRules = {
   "Cold Drinks|Mango Matcha": {
     milk:true
   },
-
   "Cold Coffee|V60": {},
   "Cold Coffee|Iced Americano": {
     shot:true,note:true
@@ -432,7 +402,6 @@ const customizationRules = {
   "Cold Coffee|Salted Caramel": {
     milk:true,shot:true,note:true
   },
-
   "Hot Coffee|Espresso": {},
   "Hot Coffee|Turkish Coffee": {},
   "Hot Coffee|American": {},
@@ -468,29 +437,23 @@ const customizationRules = {
     milk:true,shot:true,note:true
   }
 };
-
 function tr(ar,en){
   return lang==="ar"?ar:en;
 }
-
 function money(n){
   return Number(n).toFixed(2)+" JD";
 }
-
 function getRule(product){
   return customizationRules[product.cat+"|"+product.name] || null;
 }
-
 function getMilkExtra(milk){
   if(
     milk==="حليب شوفان" ||
     milk==="حليب اللوز" ||
     milk==="حليب خالي اللاكتوز"
   ) return 0.50;
-
   return 0;
 }
-
 function getItemUnitPrice(item){
   const product=products[item.id];
   return product.price+
@@ -498,7 +461,6 @@ function getItemUnitPrice(item){
     (item.syrups || []).length*SYRUP_PRICE+
     (item.extra_shot?EXTRA_SHOT_PRICE:0);
 }
-
 function milkLabel(milk){
   if(lang==="en"){
     const labels={
@@ -512,27 +474,22 @@ function milkLabel(milk){
   }
   return milk;
 }
-
 function syrupLabel(name){
   const found=syrups.find(s=>s.name===name);
   return found ? (lang==="ar"?found.ar:found.name) : name;
 }
-
 function flavorLabel(name){
   const found=flavors.find(f=>f.name===name);
   return found ? (lang==="ar"?found.ar:found.name) : name;
 }
-
 function renderCategories(){
   document.getElementById("categories").innerHTML=categories.map(c=>
     `<button class="cat ${category===c?'active':''}"
       onclick="setCategory('${c}')">${categoryName(c)}</button>`
   ).join("");
 }
-
 function categoryName(c){
   if(lang==="en") return c;
-
   return {
     "All":"الكل",
     "Cold Drinks":"مشروبات باردة",
@@ -541,26 +498,28 @@ function categoryName(c){
     "Desserts":"حلويات"
   }[c];
 }
-
 function setCategory(c){
   category=c;
   render();
 }
-
 function render(){
   renderCategories();
-
   const search=document.getElementById("search").value.toLowerCase();
-
   const filtered=products.filter(p=>
     (category==="All" || p.cat===category) &&
     p.name.toLowerCase().includes(search)
   );
-
   document.getElementById("menu").innerHTML=filtered.map(p=>{
     const i=products.indexOf(p);
-
     return `<div class="item">
+      ${p.name === "Tiramisu" ? `
+        <img
+          class="item-image"
+          src="images/tiramisu.jpg.jpeg"
+          alt="DRP Tiramisu"
+          loading="lazy"
+        >
+      ` : ""}
       <h3>${escapeHTML(p.name)}</h3>
       <div class="price">${money(p.price)}</div>
       <button class="add" onclick="addToCart(${i})">
@@ -568,16 +527,12 @@ function render(){
       </button>
     </div>`;
   }).join("");
-
   renderCart();
 }
-
 /* فتح نافذة التخصيص فقط عند وجود خيارات */
-
 function addToCart(i){
   const product=products[i];
   const rule=getRule(product);
-
   if(!rule || Object.keys(rule).length===0){
     addItemToCart(i,{
       milk_type:null,
@@ -588,36 +543,25 @@ function addToCart(i){
     });
     return;
   }
-
   pendingProductIndex=i;
   resetCustomization();
-
   document.getElementById("milkSection")
     .classList.toggle("hidden",!rule.milk);
-
   document.getElementById("flavorSection")
     .classList.toggle("hidden",!rule.flavor);
-
   document.getElementById("syrupSection")
     .classList.toggle("hidden",!rule.syrups || !rule.syrups.length);
-
   document.getElementById("shotSection")
     .classList.toggle("hidden",!rule.shot);
-
   document.getElementById("noteSection")
     .classList.toggle("hidden",!rule.note);
-
   document.getElementById("customTitle").textContent=product.name+" ☕";
-
   document.getElementById("customSubtitle").textContent=
     tr("اختار الخيارات المتاحة لمشروبك","Choose the available options for your drink");
-
   document.getElementById("customModal").classList.add("show");
-
   updateCustomizationLanguage();
   updateCustomizationPrice();
 }
-
 function resetCustomization(){
   document.getElementById("milkSelect").value="حليب عادي";
   document.getElementById("flavorSelect").value="";
@@ -627,52 +571,37 @@ function resetCustomization(){
     input.checked=false;
   });
 }
-
 /* ترجمة نافذة التخصيص */
-
 function updateCustomizationLanguage(){
   document.getElementById("milkHeading").textContent=
     tr("🥛 نوع الحليب","🥛 Milk type");
-
   document.getElementById("flavorHeading").textContent=
     tr("🍓 اختر النكهة","🍓 Choose flavor");
-
   document.getElementById("syrupHeading").textContent=
     tr("🍯 إضافات السيرب","🍯 Syrup additions");
-
   document.getElementById("shotHeading").textContent=
     tr("☕ الإسبريسو","☕ Espresso");
-
   document.getElementById("shotLabel").textContent=
     tr("إضافة Extra Shot","Add Extra Shot");
-
   document.getElementById("noteHeading").textContent=
     tr("📝 ملاحظة للباريستا (اختياري)","📝 Note for barista (optional)");
-
   document.getElementById("specialNote").placeholder=
     tr("مثلاً: سكر قليل، بدون ثلج...","Example: Less sugar, no ice...");
-
   document.getElementById("priceLabel").textContent=
     tr("السعر النهائي","Final price");
-
   document.getElementById("cancelCustom").textContent=
     tr("إلغاء","Cancel");
-
   document.getElementById("confirmCustom").textContent=
     tr("إضافة للسلة","Add to cart");
-
   document.getElementById("milkSelect").innerHTML=milkTypes.map(m=>{
     const extra=getMilkExtra(m);
     const extraLabel=extra>0
       ? " (+0.50 JD)"
       : tr(" (بدون زيادة)"," (No extra charge)");
-
     return `<option value="${m}">${milkLabel(m)}${extraLabel}</option>`;
   }).join("");
-
   const rule=getRule(products[pendingProductIndex]);
   const allowed=rule.syrups || [];
-
   document.getElementById("syrupOptions").innerHTML=
     syrups.filter(s=>allowed.includes(s.name)).map(s=>`
       <label class="custom-option">
@@ -684,7 +613,6 @@ function updateCustomizationLanguage(){
         </span>
       </label>
     `).join("");
-
   document.getElementById("flavorSelect").innerHTML=`
     <option value="">${tr("اختر النكهة","Select flavor")}</option>
     ${flavors.map(f=>`
@@ -692,83 +620,61 @@ function updateCustomizationLanguage(){
     `).join("")}
   `;
 }
-
 /* السعر المباشر */
-
 function getSelectedSyrups(){
   return Array.from(
     document.querySelectorAll(".syrup-checkbox:checked")
   ).map(input=>input.value);
 }
-
 function updateCustomizationPrice(){
   if(pendingProductIndex===null)return;
-
   const product=products[pendingProductIndex];
   const rule=getRule(product);
-
   const milk=rule.milk
     ? document.getElementById("milkSelect").value
     : null;
-
   const selectedSyrups=getSelectedSyrups();
   const extraShot=!!rule.shot &&
     document.getElementById("extraShot").checked;
-
   const price=product.price+
     getMilkExtra(milk)+
     selectedSyrups.length*SYRUP_PRICE+
     (extraShot?EXTRA_SHOT_PRICE:0);
-
   document.getElementById("customPrice").textContent=money(price);
 }
-
 function closeCustomModal(){
   document.getElementById("customModal").classList.remove("show");
   pendingProductIndex=null;
 }
-
 /* تأكيد التخصيص */
-
 function confirmCustomization(){
   if(pendingProductIndex===null)return;
-
   const index=pendingProductIndex;
   const product=products[index];
   const rule=getRule(product);
-
   const flavor=rule.flavor
     ? document.getElementById("flavorSelect").value
     : null;
-
   if(rule.flavor && !flavor){
     alert(tr("يرجى اختيار النكهة أولاً","Please select a flavor first"));
     return;
   }
-
   const customization={
     milk_type:rule.milk
       ? document.getElementById("milkSelect").value
       : null,
-
     syrups:rule.syrups ? getSelectedSyrups() : [],
-
     extra_shot:!!rule.shot &&
       document.getElementById("extraShot").checked,
-
     special_note:rule.note
       ? document.getElementById("specialNote").value.trim()
       : "",
-
     flavor
   };
-
   closeCustomModal();
   addItemToCart(index,customization);
 }
-
 /* إضافة المنتج للسلة */
-
 function addItemToCart(i,custom){
   const customization=custom || {
     milk_type:null,
@@ -777,7 +683,6 @@ function addItemToCart(i,custom){
     special_note:"",
     flavor:null
   };
-
   const key=JSON.stringify({
     id:i,
     milk_type:customization.milk_type,
@@ -786,9 +691,7 @@ function addItemToCart(i,custom){
     special_note:customization.special_note,
     flavor:customization.flavor
   });
-
   const found=cart.find(x=>x.key===key);
-
   if(found){
     found.qty++;
   }else{
@@ -803,73 +706,53 @@ function addItemToCart(i,custom){
       key
     });
   }
-
   renderCart();
   showCartToast();
 }
-
 /* رسالة نجاح الإضافة */
-
 function showCartToast(){
   const toast=document.getElementById("cartToast");
-
   toast.textContent=tr(
     "تمت إضافة المنتج إلى السلة ✓",
     "Product added to cart ✓"
   );
-
   toast.classList.add("show");
   clearTimeout(toastTimer);
-
   toastTimer=setTimeout(()=>{
     toast.classList.remove("show");
   },2000);
 }
-
 /* تغيير الكمية */
-
 function changeQty(index,n){
   const item=cart[index];
   if(!item)return;
-
   item.qty+=n;
   if(item.qty<=0)cart.splice(index,1);
-
   renderCart();
 }
-
 /* تفاصيل التخصيص في السلة */
-
 function getCartCustomizationHTML(item){
   const details=[];
-
   if(item.flavor){
     details.push(`${tr("النكهة: ","Flavor: ")}${flavorLabel(item.flavor)}`);
   }
-
   if(item.milk_type){
     details.push(`${tr("الحليب: ","Milk: ")}${milkLabel(item.milk_type)}`);
   }
-
   if(item.syrups && item.syrups.length){
     details.push(
       `${tr("السيرب: ","Syrups: ")}${item.syrups.map(syrupLabel).join("، ")}`
     );
   }
-
   if(item.extra_shot){
     details.push("Extra Shot");
   }
-
   if(item.special_note){
     details.push(`${tr("ملاحظة: ","Note: ")}${item.special_note}`);
   }
-
   return details.map(d=>`<small>${escapeHTML(d)}</small>`).join("");
 }
-
 /* حماية النصوص */
-
 function escapeHTML(value){
   return String(value ?? "").replace(/[&<>"']/g,char=>({
     "&":"&amp;",
@@ -879,15 +762,11 @@ function escapeHTML(value){
     "'":"&#39;"
   })[char]);
 }
-
 /* عرض السلة */
-
 function renderCart(){
   const box=document.getElementById("cartItems");
-
   const cartCount=cart.reduce((sum,item)=>sum+item.qty,0);
   document.getElementById("cartCount").textContent=cartCount;
-
   if(cart.length===0){
     box.innerHTML=`<p class="empty">${tr("السلة فارغة حالياً","Your cart is empty")}</p>`;
   }else{
@@ -895,7 +774,6 @@ function renderCart(){
       const p=products[x.id];
       const unitPrice=getItemUnitPrice(x);
       const lineTotal=unitPrice*x.qty;
-
       return `<div class="cart-row">
         <div class="cart-product">
           <strong>${escapeHTML(p.name)}</strong>
@@ -910,85 +788,60 @@ function renderCart(){
       </div>`;
     }).join("");
   }
-
   const total=cart.reduce((sum,x)=>sum+getItemUnitPrice(x)*x.qty,0);
-
   document.getElementById("total").textContent=
     tr("المجموع: ","Total: ")+money(total);
 }
-
 /* تغيير اللغة */
-
 function toggleLang(){
   const oldMilk=document.getElementById("milkSelect").value;
   const oldSyrups=getSelectedSyrups();
   const oldShot=document.getElementById("extraShot").checked;
   const oldNote=document.getElementById("specialNote").value;
   const oldFlavor=document.getElementById("flavorSelect").value;
-
   lang=lang==="ar"?"en":"ar";
-
   document.documentElement.lang=lang;
   document.documentElement.dir=lang==="ar"?"rtl":"ltr";
-
   document.getElementById("subtitle").textContent=
     tr("اطلب قهوتك المفضلة","ORDER YOUR FAVORITE COFFEE");
-
   document.getElementById("menuTitle").textContent=
     tr("قائمة المشروبات","OUR MENU");
-
   document.getElementById("cartHeading").textContent=
     tr("سلة الطلبات 🛒","YOUR CART 🛒");
-
   document.getElementById("checkoutBtn").textContent=
     tr("تأكيد الطلب","Confirm Order");
-
   document.getElementById("search").placeholder=
     tr("ابحث عن منتج...","Search products...");
-
   document.getElementById("customerName").placeholder=
     tr("اسم الزبون","Customer name");
-
   document.getElementById("customerPhone").placeholder=
     tr("رقم الهاتف","Phone number");
-
   document.getElementById("branch").options[0].text=
     tr("اختر الفرع","Select branch");
-
   if(pendingProductIndex!==null){
     document.getElementById("customTitle").textContent=
       products[pendingProductIndex].name+" ☕";
-
     updateCustomizationLanguage();
-
     document.getElementById("milkSelect").value=oldMilk;
     document.getElementById("flavorSelect").value=oldFlavor;
-
     document.querySelectorAll(".syrup-checkbox").forEach(input=>{
       input.checked=oldSyrups.includes(input.value);
     });
-
     document.getElementById("extraShot").checked=oldShot;
     document.getElementById("specialNote").value=oldNote;
-
     updateCustomizationPrice();
   }
-
   render();
 }
-
 /* إرسال الطلب */
-
 async function checkout(){
   if(cart.length===0){
     alert(tr("السلة فارغة!","Your cart is empty!"));
     return;
   }
-
   const customerName=document.getElementById("customerName").value.trim();
   const customerPhone=document.getElementById("customerPhone").value.trim();
   const branch=document.getElementById("branch").value;
-
   if(!customerName || !customerPhone || !branch){
     alert(tr(
       "يرجى تعبئة جميع البيانات واختيار الفرع",
@@ -996,7 +849,6 @@ async function checkout(){
     ));
     return;
   }
-
   const items=cart.map(x=>({
     name:products[x.id].name,
     quantity:x.qty,
@@ -1006,11 +858,9 @@ async function checkout(){
     special_note:x.special_note || "",
     flavor:x.flavor || null
   }));
-
   const btn=document.getElementById("checkoutBtn");
   btn.disabled=true;
   btn.textContent=tr("جاري إرسال الطلب...","Sending order...");
-
   try{
     const response=await fetch(
       "https://oceudcjqwsfdqzvhyhlp.supabase.co/functions/v1/drp-create-order",
@@ -1028,13 +878,10 @@ async function checkout(){
         })
       }
     );
-
     const result=await response.json();
-
     if(!response.ok || !result.success){
       throw new Error(result.error || "Order failed");
     }
-
     alert(
       tr(
         "تم استلام طلبك بنجاح ❤️\nرقم الطلب: ",
@@ -1042,17 +889,13 @@ async function checkout(){
       )+result.order_id+"\n"+
       tr("المجموع: ","Total: ")+money(result.total)
     );
-
     cart=[];
     renderCart();
-
     document.getElementById("customerName").value="";
     document.getElementById("customerPhone").value="";
     document.getElementById("branch").value="";
-
   }catch(error){
     console.error(error);
-
     alert(tr(
       "لم نتمكن من إرسال الطلب. حاول مرة أخرى.",
       "Could not send order. Please try again."
@@ -1062,17 +905,13 @@ async function checkout(){
     btn.textContent=tr("تأكيد الطلب","Confirm Order");
   }
 }
-
 /* إغلاق النافذة عند الضغط خارجها */
-
 document.getElementById("customModal").addEventListener("click",event=>{
   if(event.target.id==="customModal"){
     closeCustomModal();
   }
 });
-
 render();
 </script>
-
 </body>
 </html>
