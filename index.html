@@ -498,10 +498,64 @@ function categoryName(c){
     "Desserts":"حلويات"
   }[c];
 }
-function setCategory(c){
+  function setCategory(c){
   category=c;
   render();
 }
+
+/*
+  صور المنتجات: الملفات موجودة بجانب index.html في جذر GitHub repository.
+  المنتجات التي لا يوجد لها ملف مطابق تظل بدون صورة بدل عرض صورة خاطئة.
+*/
+const productImages = {
+  "Strawberry Refresher": "Strawberry_Refresher.jpeg",
+  "Strawberry Smoothie": "Strawberry_Smoothie_01.jpeg",
+  "Passion Fruit Smoothie": "Passion_Fruit_Smoothie_01.jpeg",
+  "Mango Smoothie": "Mango_Smoothie_01.jpeg",
+  "Blue Curacao": "Blue_Curacao_01.jpeg",
+  "Mojito Red Bull": "Mojito_Red_Bull_01.jpeg",
+  "Strawberry Lemonade": "Strawberry_Lemonade_01.jpeg",
+  "Iced Chocolate": "Iced_Chocolate.jpeg",
+  "Crunch Cookies": "Crunch_Cookies.jpeg",
+  "Tiramisu": "Tiramisu_01.jpeg",
+  "Lazez Pistachio": "Lazez_Pistachio_01.jpeg",
+  "Lazez Strawberry": "Lazez_Strawberry_01.jpeg",
+  "Lazez Blueberry": "Lazez_Blueberry.jpeg",
+  "Lazez Lotus": "Lazez_Lotus_01.jpeg",
+  "Lazez Small": "Lazeza_Small_01.jpeg",
+  "Lazez Large": "Lazeza_Large.jpeg",
+  "Watermelon Crunch": "Watermelon_Crunch.jpeg",
+  "V60": "V60_01.jpeg",
+  "Iced Americano": "Iced_Americano_01.jpeg",
+  "Milkshake Coffee": "Milkshake_Coffee_01.jpeg",
+  "Milkshake Caramel": "Milkshake_Caramel_01.jpeg",
+  "Iced Latte": "Iced_Latte_01.jpeg",
+  "Spanish Latte": "Spanish_Latte_01.jpeg",
+  "Pistachio Latte": "Pistachio_Latte_01.jpeg",
+  "Caramel Latte": "Caramel_Latte_01.jpeg",
+  "Caramel Macchiato": "Caramel_Macchiato.jpeg",
+  "Matcha Frappe": "Matcha_Frappe_01.jpeg",
+  "Frappe Vanilla": "Frappe_Vanilla_01.jpeg",
+  "Frappe Chocolate": "Frappe_Chocolate_01.jpeg",
+  "Frappe Caramel": "Frappe_Caramel_01.jpeg",
+  "Espresso": "Espresso.jpeg",
+  "Turkish Coffee": "Turkish_Coffee_01.jpeg",
+  "Flat White": "Flat_White_01.jpeg",
+  "Americano": "Americano_01.jpeg",
+  "Cinnamon Spice Latte": "Cinnamon_Spice_Latte_01.jpeg",
+  "Coffee Latte": "Coffee_Latte_01.jpeg",
+  "Cappuccino": "Cappuccino_01.jpeg",
+  "Hot Chocolate": "Hot_Chocolate_01.jpeg",
+  "Hot Choco Marshmallow": "Hot_Choco_Marshmallow_01.jpeg",
+  "Matcha Latte": "Matcha_Latte_01.jpeg",
+  "Hot Pistachio": "Hot_Pistachio.jpeg"
+};
+
+function getProductImage(product) {
+  const filename = productImages[product.name];
+  return filename ? encodeURI(filename) : "";
+}
+
 function render(){
   renderCategories();
   const search=document.getElementById("search").value.toLowerCase();
@@ -512,12 +566,13 @@ function render(){
   document.getElementById("menu").innerHTML=filtered.map(p=>{
     const i=products.indexOf(p);
     return `<div class="item">
-      ${p.name === "Tiramisu" ? `
+      ${getProductImage(p) ? `
         <img
           class="item-image"
-       src="tiramisu.jpg.jpeg"
-          alt="DRP Tiramisu"
+          src="${getProductImage(p)}"
+          alt="${escapeHTML(p.name)}"
           loading="lazy"
+          onerror="this.style.display='none'"
         >
       ` : ""}
       <h3>${escapeHTML(p.name)}</h3>
@@ -674,7 +729,7 @@ function confirmCustomization(){
   closeCustomModal();
   addItemToCart(index,customization);
 }
-/* إضافة المنتج للسلة */
+  /* إضافة المنتج للسلة */
 function addItemToCart(i,custom){
   const customization=custom || {
     milk_type:null,
